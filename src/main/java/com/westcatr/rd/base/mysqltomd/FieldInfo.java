@@ -27,7 +27,7 @@ public class FieldInfo {
      */
     private String fieldExplain;
     /**
-     * 字段详情
+     * 字段长度
      */
     private String fieldLength;
     /**
