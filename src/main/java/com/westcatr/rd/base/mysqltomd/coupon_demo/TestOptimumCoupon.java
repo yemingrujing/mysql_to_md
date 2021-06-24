@@ -42,7 +42,7 @@ public class TestOptimumCoupon {
 		couponList.add(coupon9);
 		couponList.add(coupon10);
 		// 支付金额
-		BigDecimal money = new BigDecimal(80);
+		BigDecimal money = new BigDecimal(125);
 		List<Coupon> optimumList = Combinations.getOptimumList(couponList, money);
 		System.out.println(JSON.toJSONString(optimumList));
 	}

@@ -87,7 +87,7 @@ public class TableServiceImpl implements TableService {
                 "\t'' identity,\n" +
                 "IF\n" +
                 "\t( COLUMN_KEY = 'PRI', '1', '' ) f_key,\n" +
-                "\t( CASE IS_NULLABLE WHEN 'YES' THEN '是' ELSE '不是' END ) AS isEmpty,\n" +
+                "\t( CASE IS_NULLABLE WHEN 'YES' THEN '是' ELSE '否' END ) AS isEmpty,\n" +
                 "\tIFNULL(COLUMN_DEFAULT, '') defaultValue,\n" +
                 "CASE\n" +
                 "\t\t\n" +

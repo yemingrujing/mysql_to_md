@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -55,7 +54,7 @@ public class Combinations {
 		return new DFSCombination<>(arr, i).select();
 	}
 
-	public static <R extends Comparable<R>> HashMap<String, BigDecimal> getCombinationMap(List<Coupon> couponList, BigDecimal amount) {
+	public static HashMap<String, BigDecimal> getCombinationMap(List<Coupon> couponList, BigDecimal amount) {
 		List<List<Coupon>> allCombination = allCombination(couponList);
 		HashMap<String, BigDecimal> map = new HashMap<>();
 		for (List<Coupon> coupons : allCombination) {
@@ -75,65 +74,10 @@ public class Combinations {
 		List<Map.Entry<String, BigDecimal>> list = new ArrayList<>(map.entrySet());
 		// 通过比较器来实现排序
 		Collections.sort(list, Comparator.comparing(Map.Entry::getValue));
-		int left = 0, right = 0;
-		for (right = list.size() - 1; left != right;) {
-			int midIndex = (right + left) / 2;
-			int mid = (right - left);
-			BigDecimal midValue = list.get(midIndex).getValue();
-			if (targetNum.compareTo(midValue) == 0) {
-				return list.get(midIndex).getKey();
-			}
-
-			if (targetNum.compareTo(midValue) == 1) {
-				left = midIndex;
-			} else {
-				right = midIndex;
-			}
-			if (mid <= 1) {
-				break;
-			}
+		if (targetNum.compareTo(list.get(0).getValue()) == 0) {
+			return list.get(0).getKey();
 		}
-		BigDecimal rightnum = list.get(right).getValue();
-		BigDecimal leftnum = list.get(left).getValue();
-		// 如果一个大于支付金额，一个小于支付金额，优先返回大于支付金额的结果
-		if (rightnum.compareTo(targetNum) == 1 &&leftnum.compareTo(targetNum) == -1) {
-			return list.get(right).getKey();
-		}
-		BigDecimal rightiffVal = rightnum.subtract(targetNum);
-		BigDecimal leftDiffVal = leftnum.subtract(targetNum);
-		return Math.abs(leftDiffVal.intValue()) > Math.abs(rightiffVal.intValue()) ? list.get(right).getKey() : list.get(left).getKey();
-	}
-
-	// 筛选最接近支付金额的结果
-	public static BigDecimal binarysearchKey(Object[] array, BigDecimal targetNum) {
-		Arrays.sort(array);
-		int left = 0, right = 0;
-		for (right = array.length - 1; left != right;) {
-			int midIndex = (right + left) / 2;
-			int mid = (right - left);
-			BigDecimal midValue = ((BigDecimal) array[midIndex]);
-			if (targetNum.compareTo(midValue) == 0) {
-				return midValue;
-			}
-
-			if (targetNum.compareTo(midValue) == 1) {
-				left = midIndex;
-			} else {
-				right = midIndex;
-			}
-			if (mid <= 1) {
-				break;
-			}
-		}
-		BigDecimal rightnum = (BigDecimal) array[right];
-		BigDecimal leftnum = (BigDecimal) array[left];
-		// 如果一个大于支付金额，一个小于支付金额，优先返回大于支付金额的结果
-		if (rightnum.compareTo(targetNum) == 1 &&leftnum.compareTo(targetNum) == -1) {
-			return rightnum;
-		}
-		BigDecimal rightiffVal = rightnum.subtract(targetNum);
-		BigDecimal leftDiffVal = leftnum.subtract(targetNum);
-		return Math.abs(leftDiffVal.intValue()) > Math.abs(rightiffVal.intValue()) ? rightnum : leftnum;
+		return list.get(list.size() - 1).getKey();
 	}
 
 	public static List<Coupon> getOptimumList(List<Coupon> couponList, BigDecimal amount) {

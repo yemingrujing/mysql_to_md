@@ -37,7 +37,7 @@ public class Coupon implements Comparable<Coupon> {
 
 	@Override
 	public int compareTo(Coupon o) {
-		return id - o.id;
+		return amount.compareTo(o.amount);
 	}
 
 	@Override
