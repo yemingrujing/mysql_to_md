@@ -46,6 +46,14 @@ public class InitRunner {
         List<TableInfo> tableList = tableService.getTableList();
         StringBuilder stringBuilder = new StringBuilder();
         for (TableInfo tableInfo : tableList) {
+            // 建表语句
+            stringBuilder.append("```sql\n");
+            String buildStatement = tableService.getBuildTable(tableInfo.getTableName());
+            stringBuilder.append(buildStatement);
+            stringBuilder.append('\n');
+            stringBuilder.append("```\n");
+
+            // 数据库字段
             stringBuilder.append("### ");
             stringBuilder.append(tableInfo.getTableComment());
             stringBuilder.append('(');

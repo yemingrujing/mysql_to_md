@@ -6,4 +6,8 @@
         ${s}
     </select>
 
+    <select id="selectOne" resultType="com.alibaba.fastjson.JSONObject">
+        ${s}
+    </select>
+
 </mapper>

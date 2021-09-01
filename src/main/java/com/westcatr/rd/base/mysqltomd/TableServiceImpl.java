@@ -9,7 +9,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author xieshuang
@@ -39,20 +44,20 @@ public class TableServiceImpl implements TableService {
                "WHERE\n" +
                "\ttable_schema='" + split1[split1.length-1] + "'";
         List<JSONObject> jsonObjects = iMapper.selectList(sql);
-        List<TableInfo> list = new ArrayList<>(jsonObjects.size());
-        for (JSONObject jsonObject : jsonObjects) {
-            list.add(JSON.toJavaObject(jsonObject, TableInfo.class));
-        }
-        if (excludeTable != null && !"".equals(excludeTable)){
-            ArrayList<String> strings = new ArrayList<>(Arrays.asList(excludeTable.split(",")));
-            list.removeIf(temp -> strings.contains(temp.getTableName()));
-        }
+        List<TableInfo> list = JSON.parseArray(JSON.toJSONString(jsonObjects), TableInfo.class);
+        Map<String, TableInfo> mapList = list.stream().collect(Collectors.toMap(TableInfo::getTableName, Function.identity(), (k1, k2) -> k1));
+        List<TableInfo> tableInfos = new ArrayList<>();
 
         if (appointTable != null && !"".equals(appointTable)){
             ArrayList<String> strings = new ArrayList<>(Arrays.asList(appointTable.split(",")));
-            list.removeIf(temp -> !strings.contains(temp.getTableName()));
+            strings.forEach(str -> tableInfos.add(mapList.get(str)));
         }
-        return list;
+
+        if (excludeTable != null && !"".equals(excludeTable)){
+            ArrayList<String> strings = new ArrayList<>(Arrays.asList(excludeTable.split(",")));
+            tableInfos.removeIf(temp -> strings.contains(temp.getTableName()));
+        }
+        return tableInfos;
     }
 
     @Override
@@ -94,9 +99,9 @@ public class TableServiceImpl implements TableService {
                 "\t\tWHEN COLUMN_COMMENT = '' THEN\n" +
                 "\t\tCOLUMN_NAME ELSE COLUMN_COMMENT \n" +
                 "\tEND fieldExplain \n" +
-                "FROM\n" +
-                "\t( SELECT * FROM information_schema.`COLUMNS` t1 WHERE TABLE_SCHEMA = '" + split1[split1.length-1] + "'\n" +
-                "\tAND TABLE_NAME = '" + tableName + "') t2\n" +
+                "FROM information_schema.`COLUMNS`\n" +
+                "\tWHERE TABLE_SCHEMA = '" + split1[split1.length-1] + "'\n" +
+                "\tAND TABLE_NAME = '" + tableName + "'\n" +
                 "ORDER BY\n" +
                 "\tnumber";
         List<JSONObject> jsonObjects = iMapper.selectList(sql);
@@ -114,5 +119,15 @@ public class TableServiceImpl implements TableService {
             list.add(JSON.toJavaObject(jsonObject, FieldInfo.class));
         }
         return list;
+    }
+
+    @Override
+    public String getBuildTable(String tableName) {
+        String sql = "SHOW CREATE TABLE " + tableName;
+        JSONObject jsonObject = iMapper.selectOne(sql);
+        if (Objects.nonNull(jsonObject)) {
+            return jsonObject.getString("Create Table");
+        }
+        return "";
     }
 }

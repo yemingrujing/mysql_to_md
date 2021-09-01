@@ -14,4 +14,6 @@ import java.util.List;
 public interface IMapper {
 
     List<JSONObject> selectList(@Param("s") String s);
+
+    JSONObject selectOne(@Param("s") String s);
 }

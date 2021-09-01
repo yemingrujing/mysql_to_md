@@ -26,4 +26,13 @@ public interface TableService {
      * @return java.util.List<com.westcatr.rd.base.mysqltomd.FieldInfo>
      */
     List<FieldInfo> getFieldInfoList(String tableName);
+
+    /**
+     * 获取表字段信息
+     * @date : 2020/5/31 18:48
+     * @author : xieshuang
+     * @param tableName
+     * @return java.util.List<com.westcatr.rd.base.mysqltomd.FieldInfo>
+     */
+    String getBuildTable(String tableName);
 }
