@@ -28,7 +28,7 @@ public interface TableService {
     List<FieldInfo> getFieldInfoList(String tableName);
 
     /**
-     * 获取表字段信息
+     * 获取建表信息
      * @date : 2020/5/31 18:48
      * @author : xieshuang
      * @param tableName
