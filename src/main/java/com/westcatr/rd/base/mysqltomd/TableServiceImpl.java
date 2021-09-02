@@ -98,7 +98,8 @@ public class TableServiceImpl implements TableService {
                 "\t\t\n" +
                 "\t\tWHEN COLUMN_COMMENT = '' THEN\n" +
                 "\t\tCOLUMN_NAME ELSE COLUMN_COMMENT \n" +
-                "\tEND fieldExplain \n" +
+                "\tEND fieldExplain, \n" +
+                "\t'' description \n" +
                 "FROM information_schema.`COLUMNS`\n" +
                 "\tWHERE TABLE_SCHEMA = '" + split1[split1.length-1] + "'\n" +
                 "\tAND TABLE_NAME = '" + tableName + "'\n" +

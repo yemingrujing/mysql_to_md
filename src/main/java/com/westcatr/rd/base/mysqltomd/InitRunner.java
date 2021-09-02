@@ -38,6 +38,7 @@ public class InitRunner {
         list.add("fieldLength");
         list.add("defaultValue");
         list.add("isEmpty");
+        list.add("description");
         if (excludeField != null && !"".equals(excludeField)){
             ArrayList<String> strings = new ArrayList<>(Arrays.asList(excludeField.split(",")));
             list.removeIf(strings::contains);
@@ -79,6 +80,9 @@ public class InitRunner {
             if (list.contains("isEmpty")){
                 stringBuilder.append(" 是否为空 |");
             }
+            if (list.contains("description")){
+                stringBuilder.append(" 说明 |");
+            }
             stringBuilder.append('\n');
             stringBuilder.append('|');
             for (int i = 0; i < list.size(); i++) {
@@ -92,7 +96,9 @@ public class InitRunner {
                     if (i == 0){
                         stringBuilder.append('|');
                     }
-                    stringBuilder.append(jsonObject.get(list.get(i)));
+                    if (jsonObject.containsKey(list.get(i))) {
+                        stringBuilder.append(jsonObject.get(list.get(i)));
+                    }
                     stringBuilder.append(" |");
                 }
                 stringBuilder.append('\n');
