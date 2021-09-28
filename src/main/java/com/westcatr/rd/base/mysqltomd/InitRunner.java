@@ -49,6 +49,9 @@ public class InitRunner {
         for (TableInfo tableInfo : tableList) {
             // 建表语句
             stringBuilder.append("```sql\n");
+            stringBuilder.append("DROP TABLE IF EXISTS `");
+            stringBuilder.append(tableInfo.getTableName());
+            stringBuilder.append("`;\n");
             String buildStatement = tableService.getBuildTable(tableInfo.getTableName());
             stringBuilder.append(buildStatement);
             stringBuilder.append('\n');
