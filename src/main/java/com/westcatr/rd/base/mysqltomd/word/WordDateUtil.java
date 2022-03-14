@@ -1,6 +1,7 @@
 package com.westcatr.rd.base.mysqltomd.word;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
+import com.deepoove.poi.XWPFTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.usermodel.CharacterRun;
@@ -33,6 +34,11 @@ public class WordDateUtil {
 
 	private static final String REPLACE_PREFIX = "{{";
 	private static final String REPLACE_SUFFIX = "}}";
+
+	public static void replaceLabel(String path, Map<String, Object> params) throws Exception {
+		XWPFTemplate template = XWPFTemplate.compile(path).render(params);
+		template.writeAndClose(new FileOutputStream(path));
+	}
 
 	public static HWPFDocument replaceText(String path, String findText, String replaceText) throws Exception {
 		HWPFDocument doc = openDocument(path);
@@ -95,26 +101,26 @@ public class WordDateUtil {
 		}
 	}
 
-	private static HWPFDocument openDocument(String file) throws Exception {
-		HWPFDocument document = new HWPFDocument(new POIFSFileSystem(new File(file)));
+	private static HWPFDocument openDocument(String path) throws Exception {
+		HWPFDocument document = new HWPFDocument(new POIFSFileSystem(new File(path)));
 		return document;
 	}
 
-	private static XWPFDocument openDocxDocument(String file) throws Exception {
-		XWPFDocument document = new XWPFDocument(new FileInputStream(new File(file)));
+	private static XWPFDocument openDocxDocument(String path) throws Exception {
+		XWPFDocument document = new XWPFDocument(new FileInputStream(new File(path)));
 		return document;
 	}
 
-	private static void saveDocument(HWPFDocument doc, String file) {
-		try (FileOutputStream out = new FileOutputStream(file)) {
+	private static void saveDocument(HWPFDocument doc, String path) {
+		try (FileOutputStream out = new FileOutputStream(path)) {
 			doc.write(out);
 		} catch (IOException e) {
 			log.error("保存文档失败：{}", ExceptionUtil.stacktraceToString(e));
 		}
 	}
 
-	private static void saveDocxDocument(XWPFDocument doc, String file) {
-		try (FileOutputStream out = new FileOutputStream(file)) {
+	private static void saveDocxDocument(XWPFDocument doc, String path) {
+		try (FileOutputStream out = new FileOutputStream(path)) {
 			doc.write(out);
 		} catch (IOException e) {
 			log.error("保存文档失败：{}", ExceptionUtil.stacktraceToString(e));
