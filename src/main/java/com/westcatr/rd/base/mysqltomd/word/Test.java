@@ -17,10 +17,10 @@ public class Test {
 //		WordDateUtil.searchKeyWord("D:\\data\\补充协议（续展）20220111.docx");
 		Map<String, String> params = new HashMap<>();
 		params.put("乙方：", "乙方：{{companyName}}");
-		WordDateUtil.replaceDocxText("D:\\data\\补充协议（续展）20220111.docx", params);
+		WordDataUtil.replaceDocxText("D:\\data\\补充协议（续展）20220111.docx", params);
 
 		Map<String, Object> replaceParam = new HashMap<>();
 		replaceParam.put("companyName", "上海耽美艺术集团");
-		WordDateUtil.replaceLabel("D:\\data\\补充协议（续展）20220111.docx", replaceParam);
+		WordDataUtil.replaceLabel("D:\\data\\补充协议（续展）20220111.docx", replaceParam);
 	}
 }

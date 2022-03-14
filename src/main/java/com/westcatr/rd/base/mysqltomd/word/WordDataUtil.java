@@ -30,7 +30,7 @@ import java.util.Objects;
  * @date 2022/3/11 17:08
  **/
 @Slf4j
-public class WordDateUtil {
+public class WordDataUtil {
 
 	private static final String REPLACE_PREFIX = "{{";
 	private static final String REPLACE_SUFFIX = "}}";
