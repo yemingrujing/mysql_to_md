@@ -2,6 +2,8 @@ package com.westcatr.rd.base.mysqltomd.word;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hwpf.HWPFDocument;
@@ -21,7 +23,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -83,8 +84,14 @@ public class WordDataUtil {
 		for (XWPFParagraph paragraph : xwpfParagraphList) {
 			if (paragraph.getText() == null || paragraph.getText().equals("")) continue;
 			for (String key : params.keySet()) {
-				if (paragraph.getText().contains(key)) {
-					replaceAtParagraph(paragraph, key, params.get(key));
+				if ("年".equals(key) || "月".equals(key) || "日".equals(key)) {
+					if (paragraph.getText().replaceAll(" ", "").contains("【】" + key)) {
+						replaceDateAtParagraph(paragraph, key, params.get(key));
+					}
+				} else {
+					if (paragraph.getText().replaceAll(" ", "").contains(key)) {
+						replaceAtParagraph(paragraph, key, params.get(key));
+					}
 				}
 			}
 		}
@@ -115,20 +122,160 @@ public class WordDataUtil {
 	 * @param newString
 	 */
 	public static void replaceAtParagraph(XWPFParagraph xwpfParagraph, String oldString, String newString) {
-		Map<String, Integer> pos_map = findSubRunPosAtParagraph(xwpfParagraph, oldString);
+		JSONObject pos_map = findSubRunPosAtParagraph(xwpfParagraph, oldString);
 		if (pos_map != null) {
 			List<XWPFRun> runs = xwpfParagraph.getRuns();
-			XWPFRun modelRun = runs.get(pos_map.get("end_pos"));
-			XWPFRun xwpfRun = xwpfParagraph.insertNewRun(pos_map.get("end_pos") + 1);
-			xwpfRun.setText(newString);
-			if (modelRun.getFontSizeAsDouble().intValue() != -1) {
-				//默认值是五号字体，但五号字体getFontSize()时，返回-1
-				xwpfRun.setFontSize(modelRun.getFontSizeAsDouble());
+			if (pos_map.getString("content").endsWith("：") || pos_map.getString("content").endsWith("：【")) {
+				XWPFRun modelRun = runs.get(pos_map.getInteger("end_pos"));
+				XWPFRun xwpfRun = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 1);
+				xwpfRun.setText(newString);
+				if (modelRun.getFontSizeAsDouble().intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					xwpfRun.setFontSize(modelRun.getFontSizeAsDouble());
+				}
+				xwpfRun.setColor("D3D3D3");
+				// 高亮显示
+				highLight(xwpfParagraph, xwpfRun);
+				xwpfRun.setFontFamily(modelRun.getFontFamily());
+				if (runs.size() >= pos_map.getInteger("end_pos") + 3) {
+					String text = runs.get(pos_map.getInteger("end_pos") + 2).getText(runs.get(pos_map.getInteger("end_pos") + 2).getTextPosition());
+					if (StrUtil.isBlank(text)) {
+						if (text.length() > newString.length()) {
+							xwpfParagraph.removeRun(pos_map.getInteger("end_pos") + 2);
+							XWPFRun run = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 2);
+							run.setText(text.substring(0, text.length() - newString.length()));
+						}
+					}
+				}
+			} else if (pos_map.getString("content").contains("【】")) {
+				XWPFRun modelRun = runs.get(pos_map.getInteger("end_pos"));
+				Double fontSize = modelRun.getFontSizeAsDouble();
+				String fontFamily = modelRun.getFontFamily();
+
+				String text = modelRun.getText(runs.get(pos_map.getInteger("end_pos")).getTextPosition()).replace(" ", "");
+				String prefix = text.substring(0, text.lastIndexOf("【") + 1);
+				String suffix = text.substring(text.lastIndexOf("】"), text.length());
+				xwpfParagraph.removeRun(pos_map.getInteger("end_pos"));
+				XWPFRun run = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos"));
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					run.setFontSize(fontSize);
+				}
+				run.setBold(Boolean.TRUE);
+				run.setFontFamily(fontFamily);
+				run.setText(prefix);
+
+				XWPFRun runNextOne = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 1);
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					runNextOne.setFontSize(fontSize);
+				}
+				runNextOne.setBold(Boolean.TRUE);
+				runNextOne.setFontFamily(fontFamily);
+				runNextOne.setColor("D3D3D3");
+				runNextOne.setText(newString);
+
+				XWPFRun runNextTwo = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 2);
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					runNextTwo.setFontSize(fontSize);
+				}
+				runNextTwo.setBold(Boolean.TRUE);
+				runNextTwo.setFontFamily(fontFamily);
+				runNextTwo.setText(suffix);
 			}
-			xwpfRun.setColor("D3D3D3");
-			// 高亮显示
-			highLight(xwpfParagraph, xwpfRun);
-			xwpfRun.setFontFamily(modelRun.getFontFamily());
+		}
+	}
+
+	/**
+	 * 替换段落中的字符串
+	 *
+	 * @param xwpfParagraph
+	 * @param oldString
+	 * @param newString
+	 */
+	public static void replaceDateAtParagraph(XWPFParagraph xwpfParagraph, String oldString, String newString) {
+		JSONObject pos_map = findSubRunPosDateAtParagraph(xwpfParagraph, oldString);
+		if (pos_map != null) {
+			List<XWPFRun> runs = xwpfParagraph.getRuns();
+			if (pos_map.getString("content").endsWith("【】" )) {
+				XWPFRun modelRun = runs.get(pos_map.getInteger("end_pos"));
+				Double fontSize = modelRun.getFontSizeAsDouble();
+				String fontFamily = modelRun.getFontFamily();
+
+				String text = modelRun.getText(runs.get(pos_map.getInteger("end_pos")).getTextPosition()).replace(" ", "");
+				String prefix = text.substring(0, text.lastIndexOf("【") + 1);
+				String suffix = text.substring(text.lastIndexOf("】"));
+				xwpfParagraph.removeRun(pos_map.getInteger("end_pos"));
+				XWPFRun run = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos"));
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					run.setFontSize(fontSize);
+				}
+				run.setBold(Boolean.TRUE);
+				run.setFontFamily(fontFamily);
+				run.setText(prefix);
+
+				XWPFRun runNextOne = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 1);
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					runNextOne.setFontSize(fontSize);
+				}
+				runNextOne.setBold(Boolean.TRUE);
+				runNextOne.setFontFamily(fontFamily);
+				runNextOne.setColor("D3D3D3");
+				runNextOne.setText(newString);
+
+				XWPFRun runNextTwo = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 2);
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					runNextTwo.setFontSize(fontSize);
+				}
+				runNextTwo.setBold(Boolean.TRUE);
+				runNextTwo.setFontFamily(fontFamily);
+				runNextTwo.setText(suffix);
+			} else if (pos_map.getString("content").contains("【】" + oldString)) {
+				XWPFRun modelRun = runs.get(pos_map.getInteger("end_pos"));
+				Double fontSize = modelRun.getFontSizeAsDouble();
+				String fontFamily = modelRun.getFontFamily();
+
+				String text = modelRun.getText(runs.get(pos_map.getInteger("end_pos")).getTextPosition());
+				String prefix = text.substring(0, text.lastIndexOf("】" + oldString)).trim();
+				String suffix = text.substring(text.lastIndexOf("】" + oldString));
+
+				xwpfParagraph.removeRun(pos_map.getInteger("end_pos"));
+				XWPFRun run = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos"));
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					run.setFontSize(fontSize);
+				}
+				run.setBold(Boolean.TRUE);
+				run.setFontFamily(fontFamily);
+				run.setText(prefix);
+
+				XWPFRun runNextOne = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 1);
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					runNextOne.setFontSize(fontSize);
+				}
+				runNextOne.setBold(Boolean.TRUE);
+				runNextOne.setFontFamily(fontFamily);
+				runNextOne.setColor("D3D3D3");
+				runNextOne.setText(newString);
+
+				XWPFRun runNextTwo = xwpfParagraph.insertNewRun(pos_map.getInteger("end_pos") + 2);
+				if (fontSize.intValue() != -1) {
+					//默认值是五号字体，但五号字体getFontSize()时，返回-1
+					runNextTwo.setFontSize(fontSize);
+				}
+				runNextTwo.setBold(Boolean.TRUE);
+				runNextTwo.setFontFamily(fontFamily);
+				runNextTwo.setText(suffix);
+
+				if (xwpfParagraph.getText().replaceAll(" ", "").contains("【】" + oldString)) {
+					replaceDateAtParagraph(xwpfParagraph, oldString, newString);
+				}
+			}
 		}
 	}
 
@@ -139,26 +286,116 @@ public class WordDataUtil {
 	 * @param oldString
 	 * @return
 	 */
-	public static Map<String, Integer> findSubRunPosAtParagraph(XWPFParagraph xwpFParagraph, String oldString) {
+	public static JSONObject findSubRunPosAtParagraph(XWPFParagraph xwpFParagraph, String oldString) {
 		List<XWPFRun> runs = xwpFParagraph.getRuns();
 		int start_pos;
 		int end_pos;
-		for (int i = 0; i < runs.size(); i++) {
+
+		String temp = "";
+		for (int i = 0, j; i < runs.size(); i++) {
+			j = i;
 			start_pos = i;
-			for (int j = i; j < runs.size(); j++) {
-				if (runs.get(j).getText(runs.get(j).getTextPosition()) == null) continue;
-				if (j < runs.size() - 1 && runs.get(j + 1).getText(runs.get(j + 1).getTextPosition()) != null) {
-					String nextText = runs.get(j + 1).getText(runs.get(j + 1).getTextPosition());
-					if (!nextText.contains("：") && StrUtil.isNotBlank(nextText.trim())) continue;
-					if (nextText.length() >= REPLACE_PREFIX.length() && nextText.substring(0, REPLACE_PREFIX.length()).contains(REPLACE_PREFIX)) continue;
-				}
-				String temp = runs.get(j).getText(runs.get(j).getTextPosition()).trim();
-				if (temp.equals(oldString)) {
+			if (StrUtil.isBlank(runs.get(j).getText(runs.get(j).getTextPosition()))) continue;
+			temp += runs.get(j).getText(runs.get(j).getTextPosition()).replace(" ", "");
+			if (temp.length() >= oldString.length()) {
+				if (temp.endsWith(oldString + "：")) {
+					Boolean flag = Boolean.FALSE;
+					if (runs.size() > j + 1) {
+						if (StrUtil.isNotBlank(runs.get(j + 1).getText(runs.get(j + 1).getTextPosition()))) {
+							String brackets = runs.get(j + 1).getText(runs.get(j + 1).getTextPosition()).replace(" ", "");
+							if (brackets.equals("【")) {
+								continue;
+							}
+							if (brackets.startsWith("【】")) {
+								end_pos = j + 1;
+								JSONObject jsonObject = new JSONObject();
+								jsonObject.put("start_pos", start_pos + 1);
+								jsonObject.put("end_pos", end_pos);
+								jsonObject.put("content", brackets);
+								return jsonObject;
+							}
+						}
+						for (int n = j + 1; n < runs.size(); n++) {
+							String str = runs.get(n).getText(runs.get(n).getTextPosition());
+							if (StrUtil.isBlank(str)) continue;
+							if (str.startsWith("（")) {
+								break;
+							}
+							if (!str.contains("：")) {
+								flag = Boolean.TRUE;
+								break;
+							}
+						}
+					}
+					if(flag) {
+						temp = "";
+						continue;
+					}
 					end_pos = j;
-					Map<String, Integer> map = new HashMap<>();
-					map.put("start_pos", start_pos);
-					map.put("end_pos", end_pos);
-					return map;
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("start_pos", start_pos);
+					jsonObject.put("end_pos", end_pos);
+					jsonObject.put("content", temp);
+					return jsonObject;
+				} else if (temp.endsWith(oldString + "：【")) {
+					end_pos = j;
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("start_pos", start_pos);
+					jsonObject.put("end_pos", end_pos);
+					jsonObject.put("content", temp);
+					return jsonObject;
+				} else if (temp.contains(oldString + "：【】") || temp.contains(oldString + "【】")) {
+					end_pos = j;
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("start_pos", start_pos);
+					jsonObject.put("end_pos", end_pos);
+					jsonObject.put("content", temp);
+					return jsonObject;
+
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 找到段落中子串的起始XWPFRun下标和终止XWPFRun的下标
+	 *
+	 * @param xwpFParagraph
+	 * @param oldString
+	 * @return
+	 */
+	public static JSONObject findSubRunPosDateAtParagraph(XWPFParagraph xwpFParagraph, String oldString) {
+		List<XWPFRun> runs = xwpFParagraph.getRuns();
+		int start_pos;
+		int end_pos;
+		String temp = "";
+		for (int i = 0, j; i < runs.size(); i++) {
+			j = i;
+			start_pos = i;
+			if (StrUtil.isBlank(runs.get(j).getText(runs.get(j).getTextPosition()))) continue;
+			temp += runs.get(j).getText(runs.get(j).getTextPosition()).replace(" ", "");
+			if (temp.length() >= oldString.length()) {
+				if (runs.size() > j + 1) {
+					if (StrUtil.isNotBlank(runs.get(j + 1).getText(runs.get(j + 1).getTextPosition()))) {
+						String brackets = runs.get(j + 1).getText(runs.get(j + 1).getTextPosition()).replace(" ", "");
+						if (brackets.equals(oldString)) {
+							end_pos = j;
+							JSONObject jsonObject = new JSONObject();
+							jsonObject.put("start_pos", start_pos);
+							jsonObject.put("end_pos", end_pos);
+							jsonObject.put("content", temp);
+							return jsonObject;
+						}
+					}
+				}
+				if (temp.contains("【】" + oldString )) {
+					end_pos = j;
+					JSONObject jsonObject = new JSONObject();
+					jsonObject.put("start_pos", start_pos);
+					jsonObject.put("end_pos", end_pos);
+					jsonObject.put("content", temp);
+					return jsonObject;
 				}
 			}
 		}
