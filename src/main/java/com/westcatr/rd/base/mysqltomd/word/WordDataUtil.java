@@ -2,7 +2,6 @@ package com.westcatr.rd.base.mysqltomd.word;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.deepoove.poi.XWPFTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +14,9 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTable;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHighlight;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STHighlightColor;
@@ -68,8 +70,12 @@ public class WordDataUtil {
 
 	public static XWPFDocument replaceDocxText(String path, Map<String, String> params, String inputPath) throws Exception {
 		XWPFDocument doc = openDocxDocument(path);
-		List<XWPFParagraph> list = doc.getParagraphs();
-		replaceInAllParagraphs(list, params);
+		// 替换段落里内容
+		List<XWPFParagraph> paragraphList = doc.getParagraphs();
+		replaceInAllParagraphs(paragraphList, params);
+		// 替换表格里内容
+//		List<XWPFTable> tableList = doc.getTables();
+//		replaceInTables(tableList, params);
 		saveDocxDocument(doc, inputPath);
 		return doc;
 	}
@@ -400,6 +406,70 @@ public class WordDataUtil {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * 替换所有的表格
+	 *
+	 * @param xwpfTableList
+	 * @param params
+	 */
+	public static void replaceInTables(List<XWPFTable> xwpfTableList, Map<String, String> params) {
+		for (XWPFTable table : xwpfTableList) {
+			replaceInTable(table, params);
+		}
+	}
+
+	/**
+	 * 替换一个表格中的所有行
+	 *
+	 * @param xwpfTable
+	 * @param params
+	 */
+	public static void replaceInTable(XWPFTable xwpfTable, Map<String, String> params) {
+		List<XWPFTableRow> rows = xwpfTable.getRows();
+		replaceInRows(rows, params);
+	}
+
+
+	/**
+	 * 替换表格中的一行
+	 *
+	 * @param rows
+	 * @param params
+	 */
+	public static void replaceInRows(List<XWPFTableRow> rows, Map<String, String> params) {
+		for (int i = 0; i < rows.size(); i++) {
+			XWPFTableRow row = rows.get(i);
+			replaceInCells(row.getTableCells(), params);
+		}
+	}
+
+	/**
+	 * 替换一行中所有的单元格
+	 *
+	 * @param xwpfTableCellList
+	 * @param params
+	 */
+	public static void replaceInCells(List<XWPFTableCell> xwpfTableCellList, Map<String, String> params) {
+		if (xwpfTableCellList.size() > 1) {
+			for (int i = 1; i < xwpfTableCellList.size(); i += 2) {
+				XWPFTableCell xwpfTableCell = xwpfTableCellList.get(i);
+				if (StrUtil.isBlank(xwpfTableCell.getText())) {
+					XWPFTableCell beforeCell = xwpfTableCellList.get(i - 1);
+					if (StrUtil.isNotBlank(beforeCell.getText()) && params.containsKey(beforeCell.getText())) {
+						String key = xwpfTableCellList.get(i - 1).getText();
+						List<XWPFParagraph> list = xwpfTableCell.getParagraphs();
+						XWPFParagraph xwpfParagraph = list.get(0);
+						XWPFRun xwpfRun = xwpfParagraph.insertNewRun(0);
+						xwpfRun.setBold(Boolean.TRUE);
+						xwpfRun.setColor("D3D3D3");
+						xwpfRun.setText(params.get(key));
+					}
+				}
+
+			}
+		}
 	}
 
 	private static HWPFDocument openDocument(String path) throws Exception {
