@@ -1,6 +1,7 @@
 package com.westcatr.rd.base.mysqltomd.pdf;
 
 import cn.hutool.core.exceptions.ExceptionUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -9,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.util.Matrix;
 
 import java.io.File;
@@ -78,6 +80,19 @@ public class PDFDataUtil {
 				contentStream.showText(vo.getMessage());
 				contentStream.endText();
 				contentStream.close();
+			}
+			// 处理最后一页，有可能是空白页
+			PDFTextStripper pdfStripper = new PDFTextStripper();
+			// 获取一个PDFTextStripper文本剥离对象
+			PDFTextStripper stripper = new PDFTextStripper();
+			// 设置起始页
+			stripper.setStartPage(doc.getNumberOfPages());
+			// 设置结束页
+			stripper.setEndPage(doc.getNumberOfPages());
+			// 获取文本内容
+			String content = stripper.getText(doc);
+			if(StrUtil.isBlank(content)) {
+				doc.removePage(doc.getNumberOfPages() - 1);
 			}
 			doc.save( vo.getOutPutFile() );
 		} catch (IOException e) {

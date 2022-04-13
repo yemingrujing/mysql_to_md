@@ -78,18 +78,24 @@ public class Test {
 		ByteArrayOutputStream outputStream =  new ByteArrayOutputStream();
 		document1.saveToStream(outputStream, FileFormat.Html);
 
-		org.jsoup.nodes.Document document = Jsoup.parseBodyFragment(outputStream.toString());
+		org.jsoup.nodes.Document nDocument = Jsoup.parseBodyFragment(outputStream.toString());
+		// 去除页脚
+		Elements elements = nDocument.getElementsByClass("Footer");
+		elements.remove();
+		// 去除页脚
+		Elements elementsHtml = nDocument.getElementsByClass("Footer");
+		elementsHtml.remove();
 		// 去掉页边距和固定宽度，去除div的样式
 //		Elements elements = document.getElementsByTag("div");
 //		for (Element element : elements) {
 //			element.attr("style", "");
 //		}
 		// 设置所有table的样式
-		Elements tables = document.getElementsByTag("table");
-		for (Element table : tables) {
-			table.attr("style", "border-collapse: collapse;");
-		}
-		String outerHtml = document.outerHtml();
+//		Elements tables = document.getElementsByTag("table");
+//		for (Element table : tables) {
+//			table.attr("style", "border-collapse: collapse;");
+//		}
+		String outerHtml = nDocument.outerHtml();
 		WordToText.HtmlToPdf(outerHtml, "D:\\data\\html\\线下展示服务确认表-180万冠名20210610.pdf");
 
 //		Document document2 = new Document();

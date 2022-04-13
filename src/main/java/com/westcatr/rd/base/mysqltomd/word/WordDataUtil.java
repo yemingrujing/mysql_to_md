@@ -20,6 +20,7 @@ import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHighlight;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STHighlightColor;
+import org.springframework.util.PropertyPlaceholderHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -515,5 +516,21 @@ public class WordDataUtil {
 			pRpr = p.getCTP().addNewR().addNewRPr();
 		}
 		return pRpr;
+	}
+
+	/**
+	 * 替换 xml字符串中 {{aaa}}
+	 * @param xmlContent  字符串模板
+	 * @param map map
+	 * @return
+	 */
+	public static String replaceXmlElementValue(String xmlContent, Map<String, String> map){
+		if(StrUtil.isBlank(xmlContent)){
+			return xmlContent;
+		}
+		//定义{{开头 ，}}结尾的占位符
+		PropertyPlaceholderHelper propertyPlaceholderHelper = new PropertyPlaceholderHelper("{{", "}}");
+		//调用替换
+		return propertyPlaceholderHelper.replacePlaceholders(xmlContent, map::get);
 	}
 }

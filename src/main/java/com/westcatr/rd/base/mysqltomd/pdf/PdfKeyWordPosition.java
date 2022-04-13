@@ -66,7 +66,7 @@ public class PdfKeyWordPosition extends PDFTextStripper {
 	public List<TextLocal> getCoordinate() {
 		try {
 			int pages = document.getNumberOfPages();
-			for (int i = 1; i < pages; i++) {
+			for (int i = 1; i <= pages; i++) {
 				pageList.clear();
 				super.setSortByPosition(true);
 				super.setStartPage(i);
