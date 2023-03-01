@@ -23,7 +23,7 @@ public class Test1 {
 		File file = new File("D:\\data\\html\\测试小花HT202204123622812038754586820220413145622.pdf");
 		String htmlPath = "D:\\data\\html\\测试pdf转html.html";
 		InputStream inputStream = null;
-		BufferedImage bufferedImage = null;
+		BufferedImage bufferedImage;
 		try {
 			inputStream = new FileInputStream(file);
 			bufferedImage = PdfConvertHtmlUtil.pdfStreamToPng(inputStream);
