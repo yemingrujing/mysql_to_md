@@ -51,7 +51,6 @@ public class WordUtil {
      *
      * @param sourceFileUrl
      * @param targetFileUrl
-     * @param imageUrl
      * @return
      */
     public static String docxToHtml(String sourceFileUrl, String targetFileUrl) {
