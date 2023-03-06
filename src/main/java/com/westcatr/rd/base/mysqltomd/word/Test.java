@@ -10,10 +10,9 @@ package com.westcatr.rd.base.mysqltomd.word;
  **/
 public class Test {
 
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-//		WordUtil.docxToHtml("D:\\data\\05.1.2-线下渠道经销特别约定--2023年版.docx", "D:\\data\\html\\05.1.2-线下渠道经销特别约定--2023年版.html", null);
-		WordUtil.docxToHtml("D:\\data\\新建 DOCX 文档.docx", "D:\\data\\html\\新建 DOCX 文档.html");
+        WordUtil.docxToHtml("D:\\data\\05.1.2-线下渠道经销特别约定--2023年版.docx", "D:\\data\\html\\05.1.2-线下渠道经销特别约定--2023年版.html");
 
-	}
+    }
 }

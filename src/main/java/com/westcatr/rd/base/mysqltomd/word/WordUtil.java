@@ -121,6 +121,10 @@ public class WordUtil {
                             break;
                         }
                         selectStr.append(text1);
+                        if (selectStr.toString().contains("甲方（盖章）")) {
+                            num = j - i;
+                            break;
+                        }
                         if (selectStr.toString().length() >= "甲方（盖章）".length()) {
                             break;
                         }
