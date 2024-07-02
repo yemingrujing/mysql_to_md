@@ -34,6 +34,8 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author nanmu@taomz.com
@@ -287,4 +289,31 @@ public class WordUtil {
         //调用替换
         return propertyPlaceholderHelper.replacePlaceholders(xmlContent, map::get);
     }
+
+    /**
+     * 替换字符串
+     *
+     * @param docxContent
+     * @param replaceMap
+     * @param regex
+     * @return
+     */
+    public static String replaceStrElementValue(String docxContent, Map<Integer, String> replaceMap, String regex) {
+        if (StrUtil.isNotBlank(docxContent) && CollUtil.isNotEmpty(replaceMap)) {
+            Matcher matcher = Pattern.compile(regex).matcher(docxContent);
+            if (matcher.find(0)) {
+                matcher.reset();
+                StringBuffer sb = new StringBuffer();
+                Integer matcherStart = 1;
+                while (matcher.find()) {
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement(StrUtil.blankToDefault(replaceMap.get(matcherStart), "")));
+                    matcherStart++;
+                }
+                matcher.appendTail(sb);
+                return sb.toString();
+            }
+        }
+        return docxContent;
+    }
+
 }
